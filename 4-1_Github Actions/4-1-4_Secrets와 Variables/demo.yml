@@ -1,0 +1,29 @@
+
+name: Demo Workflow
+on:
+  push:
+    branches:
+    - main
+env:
+  GLOBAL_ENV: "global env"
+jobs:
+  job1:
+    env:
+      JOB_ENV: "job env"
+    name: Job 1
+    runs-on: ubuntu-latest
+    steps:
+    - env:
+        STEP_ENV: "step env"
+      run: |
+        echo "actions env"
+        echo '${{ toJson(env) }}'
+    - run: |
+        echo "actions github"
+        echo '${{ toJson(github) }}'
+    # - run: |
+    #     echo 'secrets'
+    #     echo '${{ toJson(secrets) }}'
+    - run: |
+        echo 'variables'
+        echo '${{ toJson(vars) }}'

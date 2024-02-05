@@ -1,0 +1,27 @@
+name: Demo Workflow
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  push:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scanners: secret
+          exit-code: '1'
+
+      - run: |
+          docker build -t demo-nginx .
+      - uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'image'
+          image-ref: 'demo-nginx'
+          scanners: vuln
+          ignore-unfixed: true
+          exit-code: '1'
+          vuln-type: 'os'

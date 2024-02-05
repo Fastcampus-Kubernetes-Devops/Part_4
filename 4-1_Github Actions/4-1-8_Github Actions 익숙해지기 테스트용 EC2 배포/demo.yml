@@ -1,0 +1,14 @@
+name: Demo Workflow
+on:
+  push:
+    branches:
+      - main
+jobs:
+  push:
+    runs-on: [demo-runner]
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          docker ps -a | grep 'demo-nginx' && docker rm -f demo-nginx
+          docker build -t demo-nginx .
+          docker run --name demo-nginx -p 80:80 -d demo-nginx

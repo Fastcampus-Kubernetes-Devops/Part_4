@@ -1,0 +1,48 @@
+name: CICD
+on:
+  push:
+    branches:
+      - main
+
+env:
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+  AWS_DEFAULT_REGION: ${{ vars.AWS_DEFAULT_REGION }}
+  ECR_REPOSITORY_NAME: ${{ vars.ECR_REPOSITORY_NAME }}
+
+  GIT_TOKEN: ${{ secrets. GIT_TOKEN }}
+  TARGET_REPOSITORY: ${{ vars.TARGET_REPOSITORY }}
+jobs:
+  push:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_DEFAULT_REGION }}
+      - uses: aws-actions/amazon-ecr-login@v2
+      - uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ env.ECR_REPOSITORY_NAME }}:${{ github.sha}}
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: ${{ env.TARGET_REPOSITORY }}
+          token: ${{ env.GIT_TOKEN }}
+      - uses: fjogeleit/yaml-update-action@main
+        with:
+          valueFile: 'values.yaml'
+          propertyPath: 'image.tag'
+          value: ${{ github.sha }}
+          message: 'ci: Update image tag to ${{ github.sha }}'
+          commitChange: true
+          branch: main
+          repository: ${{ env.TARGET_REPOSITORY }}
+          token: ${{ env.GIT_TOKEN }}

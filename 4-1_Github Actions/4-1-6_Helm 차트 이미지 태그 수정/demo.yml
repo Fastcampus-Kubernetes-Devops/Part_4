@@ -1,0 +1,28 @@
+name: Demo Workflow
+on:
+  push:
+    branches:
+      - main
+
+env:
+  GIT_TOKEN: ${{ secrets.GIT_TOKEN }}
+  TARGET_REPOSITORY: ${{ vars.TARGET_REPOSITORY }}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: ${{ env.TARGET_REPOSITORY }}
+          token: ${{ env.GIT_TOKEN }}
+      - uses: fjogeleit/yaml-update-action@main
+        with:
+          valueFile: 'values.yaml'
+          propertyPath: 'image.tag'
+          value: ${{ github.sha }}
+          message: 'ci: Update image tag to ${{ github.sha }}'
+          commitChange: true
+          branch: main
+          repository: ${{ env.TARGET_REPOSITORY }}
+          token: ${{ env.GIT_TOKEN }}
